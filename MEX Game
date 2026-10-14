@@ -1,0 +1,45 @@
+import java.util.*;
+
+class Codechef
+{
+    public static void main(String[] args)
+    {
+        Scanner sc = new Scanner(System.in);
+
+        int T = sc.nextInt();
+
+        while (T-- > 0)
+        {
+            int N = sc.nextInt();
+
+            int[] A = new int[N];
+            int[] count = new int[105];
+
+            for (int i = 0; i < N; i++)
+            {
+                A[i] = sc.nextInt();
+                count[A[i]]++;
+            }
+
+            int mex = 0;
+
+            while (count[mex] > 0)
+                mex++;
+
+            long moves = 0;
+
+            for (int i = 1; i < mex; i++)
+                moves += (long)(count[i] - 1) * i;
+
+            for (int x = mex + 2; x < 105; x++)
+                moves += (long)count[x] * (x - mex - 1);
+
+            if (moves % 2 == 1)
+                System.out.println("Alice");
+            else
+                System.out.println("Bob");
+        }
+
+        sc.close();
+    }
+}

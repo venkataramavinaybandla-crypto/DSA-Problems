@@ -1,0 +1,93 @@
+import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        DataInputStream in = new DataInputStream(new BufferedInputStream(System.in, 1 << 16));
+        int T = ni(in);
+        StringBuilder sb = new StringBuilder();
+        while (T-- > 0) {
+            int n = ni(in);
+            int[] P = new int[n], pos = new int[n];
+            boolean sorted = true;
+            for (int i = 0; i < n; i++) { P[i] = ni(in); pos[P[i]] = i; if (P[i] != i) sorted = false; }
+            if (sorted) { sb.append("0\n"); continue; }
+
+            int lo = pos[0], hi = pos[0], firstUsable = -1, fixedUsable = -1;
+            for (int m = 1; m < n; m++) {
+                if (lo < pos[m] && pos[m] < hi) {
+                    if (firstUsable == -1) firstUsable = m;
+                    if (pos[m] == m && fixedUsable == -1) fixedUsable = m;
+                }
+                lo = Math.min(lo, pos[m]); hi = Math.max(hi, pos[m]);
+            }
+            if (firstUsable == -1) { sb.append("-1\n"); continue; }
+
+            if (fixedUsable != -1) {
+                sb.append("1\n").append(n - 1).append('\n');
+                appendAllExcept(sb, n, fixedUsable, null);
+                appendAllExcept(sb, n, fixedUsable, new int[0]);
+                continue;
+            }
+
+            int m = firstUsable, p = pos[m];
+            int[] Q = null; int mp = -1;
+            for (int c = 2; c <= n - 2 && Q == null; c++) {
+                if (c == m || c == p) continue;
+                Q = build(n, m, p, c);
+                if (Q != null) mp = c;
+            }
+            sb.append("2\n");
+            sb.append(n - 1).append('\n');
+            appendAllExcept(sb, n, p, null);
+            appendAllExcept(sb, n, p, Q);
+            sb.append(n - 1).append('\n');
+            appendAllExcept(sb, n, mp, null);
+            appendAllExcept(sb, n, mp, new int[0]);
+        }
+        System.out.print(sb);
+    }
+
+    // arr == null -> print indices; arr.length == 0 -> identity values; else arr[i]
+    static void appendAllExcept(StringBuilder sb, int n, int skip, int[] arr) {
+        boolean first = true;
+        for (int i = 0; i < n; i++) {
+            if (i == skip) continue;
+            if (!first) sb.append(' ');
+            first = false;
+            sb.append(arr == null || arr.length == 0 ? i : arr[i]);
+        }
+        sb.append('\n');
+    }
+
+    // Q[p]=m, Q[c]=c, and values 0..c-1 sit on both sides of c
+    static int[] build(int n, int m, int p, int c) {
+        int[] Q = new int[n]; Arrays.fill(Q, -1);
+        Q[p] = m; Q[c] = c;
+        ArrayList<Integer> vf = new ArrayList<>(), lf = new ArrayList<>(), rf = new ArrayList<>();
+        for (int v = 0; v < c; v++) if (v != m) vf.add(v);
+        for (int i = 0; i < c; i++) if (i != p) lf.add(i);
+        for (int i = c + 1; i < n; i++) if (i != p) rf.add(i);
+        boolean needL = !(m < c && p < c), needR = !(m < c && p > c);
+        int need = (needL ? 1 : 0) + (needR ? 1 : 0);
+        if ((needL && lf.isEmpty()) || (needR && rf.isEmpty()) || vf.size() < need) return null;
+        boolean[] used = new boolean[n]; used[m] = true; used[c] = true;
+        int k = 0;
+        if (needL) { Q[lf.get(0)] = vf.get(k); used[vf.get(k)] = true; k++; }
+        if (needR) { Q[rf.get(0)] = vf.get(k); used[vf.get(k)] = true; k++; }
+        int v = 0;
+        for (int i = 0; i < n; i++) {
+            if (Q[i] != -1) continue;
+            while (used[v]) v++;
+            Q[i] = v; used[v] = true;
+        }
+        return Q;
+    }
+
+    static int ni(DataInputStream in) throws IOException {
+        int r = 0, b = in.read();
+        while (b < '0') b = in.read();
+        while (b >= '0') { r = r * 10 + b - '0'; b = in.read(); }
+        return r;
+    }
+}
